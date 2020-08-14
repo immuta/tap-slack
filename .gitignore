@@ -1,7 +1,10 @@
 config/
 virtualenvs/
+venvs/
+config.json
 catalog.json
 state.json
+.target/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

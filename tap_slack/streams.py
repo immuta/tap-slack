@@ -1,5 +1,6 @@
 import os
 from datetime import timedelta, datetime
+import time
 
 import pytz
 import singer
@@ -300,6 +301,9 @@ class ConversationHistoryStream(SlackStream):
                                                 # newest -> oldest
                                                 min_bookmark = datetime.fromtimestamp(
                                                     record_timestamp_int)
+                                    # TODO: handle rate-limiting better
+                                    LOGGER.info("Sleeping for 1 sec to handle API rate limiting.")
+                                    time.sleep(1)
                                 self.update_bookmarks(channel_id,
                                                       min_bookmark.strftime(DATETIME_FORMAT))
                             # Update the date window
