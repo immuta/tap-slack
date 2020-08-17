@@ -7,7 +7,7 @@ from tap_slack.client import SlackClient
 from tap_slack.streams import AVAILABLE_STREAMS
 from tap_slack.catalog import generate_catalog
 
-LOGGER = singer.get_logger()
+LOGGER = singer.get_logger() 
 
 
 def auto_join(client, config):

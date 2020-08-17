@@ -25,3 +25,28 @@ which means that apparently our api token does not have the `"usergroups:read"` 
 
 Errors during transform: [last_read: data does not match {'type': ['string', 'null'], 'format': 'date-time'}, : data does not match {'additionalProperties': False, 'properties': {'channel_id': {'type': ['string', 'null']}, 'blocks': {'items': {'additionalProperties': True, 'properties': {'type': {'type': ['string', 'null']}}, 'type': ['object', 'null']}, 'type': ['array', 'null']}, 'bot_id': {'type': ['string', 'null']}, 'bot_profile': {'additionalProperties': False, 'properties': {'app_id': {'type': ['string', 'null']}, 'deleted': {'type': ['boolean', 'null']}, 'id': {'type': ['string', 'null']}, 'name': {'type': ['string', 'null']}, 'team_id': {'type': ['string', 'null']}, 'updated': {'type': ['string', 'null'], 'format': 'date-time'}}, 'type': ['object', 'null']}, 'client_msg_id': {'type': ['string', 'null']}, 'display_as_bot': {'type': ['boolean', 'null']}, 'file_id': {'type': ['null', 'string']}, 'file_ids': {'items': {'type': ['string', 'null']}, 'type': ['array', 'null']}, 'icons': {'additionalProperties': False, 'properties': {'emoji': {'type': ['null', 'string']}}, 'type': ['null', 'object']}, 'inviter': {'type': ['null', 'string']}, 'is_delayed_message': {'type': ['null', 'boolean']}, 'is_intro': {'type': ['null', 'boolean']}, 'is_starred': {'type': ['null', 'boolean']}, 'last_read': {'type': ['string', 'null'], 'format': 'date-time'}, 'latest_reply': {'type': ['string', 'null']}, 'name': {'type': ['null', 'string']}, 'old_name': {'type': ['null', 'string']}, 'parent_user_id': {'type': ['null', 'string']}, 'permalink': {'format': 'uri', 'type': ['null', 'string']}, 'pinned_to': {'items': {'type': ['null', 'string']}, 'type': ['null', 'array']}, 'purpose': {'type': ['null', 'string']}, 'reactions': {'items': {'additionalProperties': True, 'properties': {'count': {'type': ['integer', 'null']}, 'name': {'type': ['string', 'null']}, 'users': {'items': {'type': ['string', 'null']}, 'type': ['array', 'null']}}, 'type': ['object', 'null']}, 'type': ['array', 'null']}, 'reply_count': {'type': ['integer', 'null']}, 'reply_users': {'items': {'type': ['string', 'null']}, 'type': ['array', 'null']}, 'reply_users_count': {'type': ['integer', 'null']}, 'source_team': {'type': ['null', 'string']}, 'subscribed': {'type': ['boolean', 'null']}, 'subtype': {'type': ['string', 'null']}, 'team': {'type': ['string', 'null']}, 'text': {'type': ['string', 'null']}, 'thread_ts': {'type': ['string', 'null']}, 'topic': {'type': ['null', 'string']}, 'ts': {'type': ['string', 'null'], 'format': 'date-time'}, 'type': {'type': ['string', 'null']}, 'unread_count': {'type': ['null', 'integer']}, 'upload': {'type': ['boolean', 'null']}, 'user': {'type': ['string', 'null']}, 'user_team': {'type': ['null', 'string']}, 'username': {'type': ['null', 'string']}}, 'type': ['object', 'null']}]
 ```
+
+
+---
+
+* command to test the tap
+
+```
+$ ./venvs/tap/bin/tap-slack --config config.json  --catalog catalog.json | ./venvs/target/bin/singer-check-tap 
+```
+
+* command to reset local postgres db
+
+```
+immuta=> drop table channel_members; drop table channels; drop table channels__members; drop table channels__pending_connected_team_ids; drop table channels__pending_shared; drop table channels__previous_names; drop table channels__shared_team_ids; drop table users; drop table messages; drop table messages__blocks; drop table messages__file_ids; drop table messages__pinned_to; drop table messages__reactions; drop table messages__reactions__users; drop table messages__reply_users; drop table messages__reply_users;
+```
+
+* for the config
+
+```
+
+    "channels":[
+        "C011NMD398D",
+        "CFFJBSP4M"
+      ],
+```

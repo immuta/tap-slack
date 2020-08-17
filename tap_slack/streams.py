@@ -94,7 +94,10 @@ class SlackStream:
 
     def _specified_channels(self):
         for channel_id in self.config.get("channels"):
-            yield self.client.get_channel(include_num_members=0, channel=channel_id)
+            # yield self.client.get_channel(include_num_members=0, channel=channel_id)
+            # mine below
+            channel = next(iter(self.client.get_channel(include_num_members=0, channel=channel_id)))
+            yield channel
 
     def channels(self):
         if "channels" in self.config:
@@ -245,7 +248,7 @@ class ConversationHistoryStream(SlackStream):
                                           latest=int(date_window_end.timestamp()))
 
                         if messages:
-                            for page in messages:
+                            for i, page in enumerate(messages):
                                 messages = page.get('messages')
                                 transformed_messages = transform_json(stream=self.name,
                                                                       data=messages,
@@ -301,8 +304,9 @@ class ConversationHistoryStream(SlackStream):
                                                 # newest -> oldest
                                                 min_bookmark = datetime.fromtimestamp(
                                                     record_timestamp_int)
-                                    # TODO: handle rate-limiting better
-                                    LOGGER.info("Sleeping for 1 sec to handle API rate limiting.")
+                                # TODO: handle rate-limiting better
+                                if i % 25 == 0:
+                                    LOGGER.info(f"Sleeping for 1 sec to handle API rate limiting. Here is the page number: {i}")
                                     time.sleep(1)
                                 self.update_bookmarks(channel_id,
                                                       min_bookmark.strftime(DATETIME_FORMAT))

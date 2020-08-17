@@ -5,6 +5,7 @@ config.json
 catalog.json
 state.json
 .target/
+notes.md
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
