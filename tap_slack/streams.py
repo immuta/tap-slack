@@ -94,8 +94,6 @@ class SlackStream:
 
     def _specified_channels(self):
         for channel_id in self.config.get("channels"):
-            # yield self.client.get_channel(include_num_members=0, channel=channel_id)
-            # mine below
             channel = next(iter(self.client.get_channel(include_num_members=0, channel=channel_id)))
             yield channel
 

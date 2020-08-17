@@ -8,7 +8,6 @@ def transform_json(stream, data, date_fields, channel_id=None):
 
     if data:
         for record in data:
-
             if stream == "messages":
                 # Strip out file info and just keep id
                 file_ids = []
@@ -37,5 +36,4 @@ def transform_json(stream, data, date_fields, channel_id=None):
                         record[date_field] = decimal_timestamp_to_utc_timestamp(timestamp)
                     else:
                         record[date_field] = decimal_timestamp_to_utc_timestamp(timestamp)
-            
     return data
