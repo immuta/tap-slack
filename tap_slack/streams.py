@@ -1,6 +1,5 @@
 import os
 from datetime import timedelta, datetime
-import time
 
 import pytz
 import singer
