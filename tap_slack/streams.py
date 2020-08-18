@@ -5,7 +5,7 @@ import time
 import pytz
 import singer
 from singer import metadata, utils
-from singer.utils import strptime_to_utc, ratelimit
+from singer.utils import strptime_to_utc
 
 from tap_slack.transform import transform_json
 
@@ -246,7 +246,7 @@ class ConversationHistoryStream(SlackStream):
                                           latest=int(date_window_end.timestamp()))
 
                         if messages:
-                            for i, page in enumerate(messages):
+                            for page in messages:
                                 messages = page.get('messages')
                                 transformed_messages = transform_json(stream=self.name,
                                                                       data=messages,
