@@ -5,7 +5,7 @@ import time
 import pytz
 import singer
 from singer import metadata, utils
-from singer.utils import strptime_to_utc
+from singer.utils import strptime_to_utc, ratelimit
 
 from tap_slack.transform import transform_json
 
@@ -302,10 +302,6 @@ class ConversationHistoryStream(SlackStream):
                                                 # newest -> oldest
                                                 min_bookmark = datetime.fromtimestamp(
                                                     record_timestamp_int)
-                                # TODO: handle rate-limiting better
-                                if i % 25 == 0:
-                                    LOGGER.info(f"Sleeping for 1 sec to handle API rate limiting. Here is the page number: {i}")
-                                    time.sleep(1)
                                 self.update_bookmarks(channel_id,
                                                       min_bookmark.strftime(DATETIME_FORMAT))
                             # Update the date window

@@ -7,6 +7,7 @@ import time
 import backoff
 import singer
 from slack.errors import SlackApiError
+from urllib.error import URLError
 
 LOGGER = singer.get_logger()
 
@@ -26,7 +27,7 @@ class SlackClient(object):
             time.sleep(delay)
 
     @backoff.on_exception(backoff.constant,
-                          (SlackApiError, TimeoutError),
+                          (SlackApiError, TimeoutError, URLError),
                           max_tries=2,
                           jitter=None,
                           giveup=wait,
@@ -38,7 +39,7 @@ class SlackClient(object):
             types=types)
 
     @backoff.on_exception(backoff.constant,
-                          (SlackApiError, TimeoutError),
+                          (SlackApiError, TimeoutError, URLError),
                           max_tries=2,
                           jitter=None,
                           giveup=wait,
@@ -49,7 +50,7 @@ class SlackClient(object):
         yield page.get('channel')
 
     @backoff.on_exception(backoff.constant,
-                          (SlackApiError, TimeoutError),
+                          (SlackApiError, TimeoutError, URLError),
                           max_tries=2,
                           jitter=None,
                           giveup=wait,
@@ -68,7 +69,7 @@ class SlackClient(object):
         return members_cursor
 
     @backoff.on_exception(backoff.constant,
-                          (SlackApiError, TimeoutError),
+                          (SlackApiError, TimeoutError, URLError),
                           max_tries=2,
                           jitter=None,
                           giveup=wait,
@@ -97,7 +98,7 @@ class SlackClient(object):
         return messages
 
     @backoff.on_exception(backoff.constant,
-                          (SlackApiError, TimeoutError),
+                          (SlackApiError, TimeoutError, URLError),
                           max_tries=2,
                           jitter=None,
                           giveup=wait,
@@ -110,7 +111,7 @@ class SlackClient(object):
                                                     latest=latest)
 
     @backoff.on_exception(backoff.constant,
-                          (SlackApiError, TimeoutError),
+                          (SlackApiError, TimeoutError, URLError),
                           max_tries=2,
                           jitter=None,
                           giveup=wait,
@@ -119,7 +120,7 @@ class SlackClient(object):
         return self.webclient.users_list(limit=limit)
 
     @backoff.on_exception(backoff.constant,
-                          (SlackApiError, TimeoutError),
+                          (SlackApiError, TimeoutError, URLError),
                           max_tries=2,
                           jitter=None,
                           giveup=wait,
@@ -130,7 +131,7 @@ class SlackClient(object):
                                               include_user=include_user)
 
     @backoff.on_exception(backoff.constant,
-                          (SlackApiError, TimeoutError),
+                          (SlackApiError, TimeoutError, URLError),
                           max_tries=2,
                           jitter=None,
                           giveup=wait,
@@ -139,7 +140,7 @@ class SlackClient(object):
         return self.webclient.team_info()
 
     @backoff.on_exception(backoff.constant,
-                          (SlackApiError, TimeoutError),
+                          (SlackApiError, TimeoutError, URLError),
                           max_tries=2,
                           jitter=None,
                           giveup=wait,
@@ -148,7 +149,7 @@ class SlackClient(object):
         return self.webclient.files_list(from_ts=from_ts, to_ts=to_ts)
 
     @backoff.on_exception(backoff.constant,
-                          (SlackApiError, TimeoutError),
+                          (SlackApiError, TimeoutError, URLError),
                           max_tries=2,
                           jitter=None,
                           giveup=wait,
@@ -157,7 +158,7 @@ class SlackClient(object):
         return self.webclient.files_remote_list(from_ts=from_ts, to_ts=to_ts)
 
     @backoff.on_exception(backoff.constant,
-                          (SlackApiError, TimeoutError),
+                          (SlackApiError, TimeoutError, URLError),
                           max_tries=2,
                           jitter=None,
                           giveup=wait,
