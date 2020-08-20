@@ -10,6 +10,7 @@ from slack.errors import SlackApiError
 from urllib.error import URLError
 
 LOGGER = singer.get_logger()
+max_tries = 5
 backoff_exceptions = (SlackApiError, TimeoutError, ConnectionResetError, URLError)
 
 
@@ -38,7 +39,7 @@ class SlackClient(object):
 
     @backoff.on_exception(backoff.constant,
                           backoff_exceptions,
-                          max_tries=2,
+                          max_tries=max_tries,
                           jitter=None,
                           giveup=wait,
                           interval=0)
@@ -50,7 +51,7 @@ class SlackClient(object):
 
     @backoff.on_exception(backoff.constant,
                           backoff_exceptions,
-                          max_tries=2,
+                          max_tries=max_tries,
                           jitter=None,
                           giveup=wait,
                           interval=0)
@@ -61,7 +62,7 @@ class SlackClient(object):
 
     @backoff.on_exception(backoff.constant,
                           backoff_exceptions,
-                          max_tries=2,
+                          max_tries=max_tries,
                           jitter=None,
                           giveup=wait,
                           interval=0)
@@ -80,12 +81,13 @@ class SlackClient(object):
 
     @backoff.on_exception(backoff.constant,
                           backoff_exceptions,
-                          max_tries=2,
+                          max_tries=max_tries,
                           jitter=None,
                           giveup=wait,
                           interval=0)
     def get_messages(self, channel, oldest, latest):
         try:
+            LOGGER.info(f"Attempting a get_messages API call for channel: {channel}")
             messages = self.webclient \
                 .conversations_history(channel=channel,
                                        oldest=oldest,
@@ -109,7 +111,7 @@ class SlackClient(object):
 
     @backoff.on_exception(backoff.constant,
                           backoff_exceptions,
-                          max_tries=2,
+                          max_tries=max_tries,
                           jitter=None,
                           giveup=wait,
                           interval=0)
@@ -122,7 +124,7 @@ class SlackClient(object):
 
     @backoff.on_exception(backoff.constant,
                           backoff_exceptions,
-                          max_tries=2,
+                          max_tries=max_tries,
                           jitter=None,
                           giveup=wait,
                           interval=0)
@@ -131,7 +133,7 @@ class SlackClient(object):
 
     @backoff.on_exception(backoff.constant,
                           backoff_exceptions,
-                          max_tries=2,
+                          max_tries=max_tries,
                           jitter=None,
                           giveup=wait,
                           interval=0)
@@ -142,7 +144,7 @@ class SlackClient(object):
 
     @backoff.on_exception(backoff.constant,
                           backoff_exceptions,
-                          max_tries=2,
+                          max_tries=max_tries,
                           jitter=None,
                           giveup=wait,
                           interval=0)
@@ -151,7 +153,7 @@ class SlackClient(object):
 
     @backoff.on_exception(backoff.constant,
                           backoff_exceptions,
-                          max_tries=2,
+                          max_tries=max_tries,
                           jitter=None,
                           giveup=wait,
                           interval=0)
@@ -160,7 +162,7 @@ class SlackClient(object):
 
     @backoff.on_exception(backoff.constant,
                           backoff_exceptions,
-                          max_tries=2,
+                          max_tries=max_tries,
                           jitter=None,
                           giveup=wait,
                           interval=0)
@@ -169,7 +171,7 @@ class SlackClient(object):
 
     @backoff.on_exception(backoff.constant,
                           backoff_exceptions,
-                          max_tries=2,
+                          max_tries=max_tries,
                           jitter=None,
                           giveup=wait,
                           interval=0)
