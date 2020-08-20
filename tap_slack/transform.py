@@ -1,5 +1,3 @@
-
-
 def decimal_timestamp_to_utc_timestamp(timestamp):
     # Some timestamps returned by the Slack API are in the format of `Seconds.Milliseconds`
     # and this takes only the `Seconds` part of that timestamp.
@@ -20,7 +18,7 @@ def transform_json(stream, data, date_fields, channel_id=None):
                         file_ids.append(file_id)
                 record['file_ids'] = file_ids
 
-            if stream == "messages" or "threads":
+            if stream in ("messages", "threads"):
                 # add channel_id to the message
                 record['channel_id'] = channel_id
 

@@ -1,5 +1,6 @@
 import os
 from datetime import timedelta, datetime
+from urllib.error import URLError
 
 import pytz
 import singer
@@ -93,7 +94,8 @@ class SlackStream:
 
     def _specified_channels(self):
         for channel_id in self.config.get("channels"):
-            yield self.client.get_channel(include_num_members=0, channel=channel_id)
+            channel = next(iter(self.client.get_channel(include_num_members=0, channel=channel_id)))
+            yield channel
 
     def channels(self):
         if "channels" in self.config:
@@ -237,79 +239,82 @@ class ConversationHistoryStream(SlackStream):
                     max_bookmark = start
 
                     while date_window_start < date_window_end:
+                        try:
+                            messages = self.client \
+                                .get_messages(channel=channel_id,
+                                            oldest=int(date_window_start.timestamp()),
+                                            latest=int(date_window_end.timestamp()))
 
-                        messages = self.client \
-                            .get_messages(channel=channel_id,
-                                          oldest=int(date_window_start.timestamp()),
-                                          latest=int(date_window_end.timestamp()))
+                            if messages:
+                                for page in messages:
+                                    messages = page.get('messages')
+                                    transformed_messages = transform_json(stream=self.name,
+                                                                        data=messages,
+                                                                        date_fields=self.date_fields,
+                                                                        channel_id=channel_id)
+                                    for message in transformed_messages:
+                                        data = {'channel_id': channel_id}
+                                        data = {**data, **message}
 
-                        if messages:
-                            for page in messages:
-                                messages = page.get('messages')
-                                transformed_messages = transform_json(stream=self.name,
-                                                                      data=messages,
-                                                                      date_fields=self.date_fields,
-                                                                      channel_id=channel_id)
-                                for message in transformed_messages:
-                                    data = {'channel_id': channel_id}
-                                    data = {**data, **message}
+                                        # If threads are being synced then the message data for the
+                                        # message the threaded replies are in response to will be
+                                        # synced to the messages table as well as the threads table
+                                        if threads_stream:
+                                            # If threads is selected we need to sync all the
+                                            # threaded replies to this message
+                                            threads_stream.write_schema()
+                                            threads_stream.sync(mdata=threads_mdata,
+                                                                channel_id=channel_id,
+                                                                ts=data.get('thread_ts'))
+                                            threads_stream.write_state()
+                                        with singer.Transformer(
+                                                integer_datetime_fmt=
+                                                "unix-seconds-integer-datetime-parsing"
+                                        ) as transformer:
+                                            transformed_record = transformer.transform(
+                                                data=data,
+                                                schema=schema,
+                                                metadata=metadata.to_map(mdata)
+                                            )
+                                            record_timestamp = \
+                                                transformed_record.get('thread_ts', '').partition('.')[
+                                                    0]
+                                            record_timestamp_int = int(record_timestamp)
+                                            if record_timestamp_int >= start.timestamp():
+                                                if self.write_to_singer:
+                                                    singer.write_record(stream_name=self.name,
+                                                                        time_extracted=singer.utils.now(),
+                                                                        record=transformed_record)
+                                                    counter.increment()
 
-                                    # If threads are being synced then the message data for the
-                                    # message the threaded replies are in response to will be
-                                    # synced to the messages table as well as the threads table
-                                    if threads_stream:
-                                        # If threads is selected we need to sync all the
-                                        # threaded replies to this message
-                                        threads_stream.write_schema()
-                                        threads_stream.sync(mdata=threads_mdata,
-                                                            channel_id=channel_id,
-                                                            ts=data.get('thread_ts'))
-                                        threads_stream.write_state()
-                                    with singer.Transformer(
-                                            integer_datetime_fmt=
-                                            "unix-seconds-integer-datetime-parsing"
-                                    ) as transformer:
-                                        transformed_record = transformer.transform(
-                                            data=data,
-                                            schema=schema,
-                                            metadata=metadata.to_map(mdata)
-                                        )
-                                        record_timestamp = \
-                                            transformed_record.get('thread_ts', '').partition('.')[
-                                                0]
-                                        record_timestamp_int = int(record_timestamp)
-                                        if record_timestamp_int >= start.timestamp():
-                                            if self.write_to_singer:
-                                                singer.write_record(stream_name=self.name,
-                                                                    time_extracted=singer.utils.now(),
-                                                                    record=transformed_record)
-                                                counter.increment()
+                                                if datetime.utcfromtimestamp(
+                                                        record_timestamp_int).replace(
+                                                    tzinfo=utc) > max_bookmark.replace(tzinfo=utc):
+                                                    # Records are sorted by most recent first, so this
+                                                    # should only fire once every sync, per channel
+                                                    max_bookmark = datetime.fromtimestamp(
+                                                        record_timestamp_int)
+                                                elif datetime.utcfromtimestamp(
+                                                        record_timestamp_int).replace(
+                                                    tzinfo=utc) < min_bookmark:
+                                                    # The min bookmark tracks how far back we've synced
+                                                    # during the sync, since the records are ordered
+                                                    # newest -> oldest
+                                                    min_bookmark = datetime.fromtimestamp(
+                                                        record_timestamp_int)
+                                    self.update_bookmarks(channel_id,
+                                                        min_bookmark.strftime(DATETIME_FORMAT))
+                                # Update the date window
+                                date_window_start = date_window_end
+                                date_window_end = date_window_start + timedelta(
+                                    days=self.date_window_size)
+                                if date_window_end > end:
+                                    date_window_end = end
+                            else:
+                                date_window_start = date_window_end
+                        except (ConnectionResetError, URLError):
+                            LOGGER.warning("Connection was reset by the server more than `max_tries` times. Unable to retrieve some messages.")
 
-                                            if datetime.utcfromtimestamp(
-                                                    record_timestamp_int).replace(
-                                                tzinfo=utc) > max_bookmark.replace(tzinfo=utc):
-                                                # Records are sorted by most recent first, so this
-                                                # should only fire once every sync, per channel
-                                                max_bookmark = datetime.fromtimestamp(
-                                                    record_timestamp_int)
-                                            elif datetime.utcfromtimestamp(
-                                                    record_timestamp_int).replace(
-                                                tzinfo=utc) < min_bookmark:
-                                                # The min bookmark tracks how far back we've synced
-                                                # during the sync, since the records are ordered
-                                                # newest -> oldest
-                                                min_bookmark = datetime.fromtimestamp(
-                                                    record_timestamp_int)
-                                self.update_bookmarks(channel_id,
-                                                      min_bookmark.strftime(DATETIME_FORMAT))
-                            # Update the date window
-                            date_window_start = date_window_end
-                            date_window_end = date_window_start + timedelta(
-                                days=self.date_window_size)
-                            if date_window_end > end:
-                                date_window_end = end
-                        else:
-                            date_window_start = date_window_end
 
 
 # UsersStream = Slack Users

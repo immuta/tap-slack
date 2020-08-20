@@ -93,6 +93,16 @@ including
 Will cause the tap to sync 5 days of data per request, for applicable streams. The default value if 
 one is not defined is to window requests for 7 days at a time.
 
+### Lookback window
+
+By default, this tap will look at least 14 days into the past (even if `"start_date"` is sooner.). 
+This minimal lookback period, can be changed in the tap config:
+
+```json
+"lookback_window": "1"
+```
+
+
 ## Usage
 
 It is recommended to follow Singer [best practices](https://github.com/singer-io/getting-started/blob/master/docs/RUNNING_AND_DEVELOPING.md#running-and-developing-singer-taps-and-targets) when running taps either [on their own](https://github.com/singer-io/getting-started/blob/master/docs/RUNNING_AND_DEVELOPING.md#running-a-singer-tap) or [with a Singer target](https://github.com/singer-io/getting-started/blob/master/docs/RUNNING_AND_DEVELOPING.md#running-a-singer-tap-with-a-singer-target).
