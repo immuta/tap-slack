@@ -1,11 +1,13 @@
 import os
 from datetime import timedelta, datetime
+import time
 from urllib.error import URLError
 
 import pytz
 import singer
 from singer import metadata, utils
 from singer.utils import strptime_to_utc
+from slack.errors import SlackApiError
 
 from tap_slack.transform import transform_json
 
@@ -312,8 +314,13 @@ class ConversationHistoryStream(SlackStream):
                                     date_window_end = end
                             else:
                                 date_window_start = date_window_end
+                        
+                        # error and API rate-limit handling
                         except (ConnectionResetError, URLError):
-                            LOGGER.warning("Connection was reset by the server more than `max_tries` times. Unable to retrieve some messages.")
+                            LOGGER.error(f"Connection was reset by the server more than `max_tries` times. Unable to retrieve messages from {date_window_start} to {date_window_end} for channel {channel['name']}")
+                        except SlackApiError:
+                            LOGGER.error(f"Received SlackAPIError more than `max_tries` times. Unable to retrieve messages from {date_window_start} to {date_window_end} for channel {channel['name']}")
+                        time.sleep(5/6)    # Rate-limited at 50 API calls per 60 seconds
 
 
 
