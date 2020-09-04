@@ -70,14 +70,14 @@ class SlackStream:
         lookback_window = self.config.get('lookback_window', '14')
         start_dttm = strptime_to_utc(start_date)
         attribution_window = int(lookback_window)
-        now_dttm = utils.now()
-        delta_days = (now_dttm - start_dttm).days
+        end_dttm = strptime_to_utc(self.config.get('end_date', utils.now()))
+        delta_days = (end_dttm - start_dttm).days
         if delta_days < attribution_window:
-            start_ddtm = now_dttm - timedelta(days=attribution_window)
+            start_ddtm = end_dttm - timedelta(days=attribution_window)
         else:
             start_ddtm = start_dttm
 
-        return start_ddtm, now_dttm
+        return start_ddtm, end_dttm
 
     def _all_channels(self):
         types = "public_channel"
