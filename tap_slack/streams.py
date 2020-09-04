@@ -264,11 +264,15 @@ class ConversationHistoryStream(SlackStream):
                                         if threads_stream:
                                             # If threads is selected we need to sync all the
                                             # threaded replies to this message
-                                            threads_stream.write_schema()
-                                            threads_stream.sync(mdata=threads_mdata,
-                                                                channel_id=channel_id,
-                                                                ts=data.get('thread_ts'))
-                                            threads_stream.write_state()
+
+                                            # only sync threads if there was a thread response to the message
+                                            if data.get('reply_count', 0):
+                                                threads_stream.write_schema()
+                                                threads_stream.sync(mdata=threads_mdata,
+                                                                    channel_id=channel_id,
+                                                                    ts=data.get('thread_ts'))
+                                                threads_stream.write_state()
+                                                time.sleep(5/6)    # Rate-limited at 50 API calls per 60 seconds
                                         with singer.Transformer(
                                                 integer_datetime_fmt=
                                                 "unix-seconds-integer-datetime-parsing"
@@ -384,6 +388,7 @@ class ThreadsStream(SlackStream):
     date_fields = ['ts', 'last_read']
 
     def sync(self, mdata, channel_id, ts):
+        LOGGER.info("------------------------CALLING GET_THREAD-------------------------")
         schema = self.load_schema()
         start, end = self.get_absolute_date_range(self.config.get('start_date'))
 
